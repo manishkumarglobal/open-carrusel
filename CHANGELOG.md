@@ -25,6 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `CLAUDE.md` no longer contradicts the product it describes. It stated a
+  maximum of 10 slides where the code enforces 20, listed the design agent's
+  granted tools as `Bash WebFetch` when the chat route also grants `Read`, and
+  described the upload route as images-only when it also accepts WOFF2 and TTF
+  fonts. The slide limit mattered most: the agent is handed both that file and a
+  system prompt that interpolates the real limit, so it was reading two
+  different numbers. `README.md` repeated the same stale tool list. A test now
+  pins these statements to the code so they cannot drift again.
 - `aspectRatio` is validated on update as well as on create. `PUT` previously
   accepted any string, and an unsupported value has no entry in `DIMENSIONS`,
   which the preview iframe, the export viewport and the safe-zone overlay all

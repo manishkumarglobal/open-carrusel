@@ -146,7 +146,7 @@ You won't get the AI chat without Claude Code installed (the in-app agent shells
 
 ## 💬 How the AI agent works
 
-The in-app agent is the **Claude CLI** spawned as a subprocess from `/api/chat` with `--allowedTools Bash WebFetch`. Messages stream back to the browser via Server-Sent Events.
+The in-app agent is the **Claude CLI** spawned as a subprocess from `/api/chat` with `--allowedTools Bash WebFetch Read`. Messages stream back to the browser via Server-Sent Events.
 
 When you ask for a slide, Claude:
 
