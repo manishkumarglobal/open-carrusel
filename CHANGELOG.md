@@ -11,7 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Security
+
+- Update endpoints no longer merge an arbitrary request body onto the stored
+  entity. `PUT /api/carousels/[id]`, `PUT /api/carousels/[id]/slides/[slideId]`
+  and `PUT /api/brand` now select only the fields each endpoint defines as
+  mutable. A caller could previously replace a carousel's `id`, delete every
+  slide by sending `slides: []`, rewrite `createdAt`, set `isTemplate` so the
+  carousel disappeared from the dashboard while staying on disk, empty a slide's
+  `previousVersions` undo history, and persist unknown keys. The library
+  functions declared narrow contracts, but TypeScript types are erased at
+  runtime and nothing enforced them against a real caller.
+
+### Fixed
+
+- `aspectRatio` is validated on update as well as on create. `PUT` previously
+  accepted any string, and an unsupported value has no entry in `DIMENSIONS`,
+  which the preview iframe, the export viewport and the safe-zone overlay all
+  read.
 
 ## [0.1.1] - 2026-09-02
 
