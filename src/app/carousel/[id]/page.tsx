@@ -26,6 +26,7 @@ export default function CarouselEditorPage({ params }: PageProps) {
   const router = useRouter();
   const [carousel, setCarousel] = useState<Carousel | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const [claudeAvailable, setClaudeAvailable] = useState(true);
   const [chatOpen, setChatOpen] = useState(true);
@@ -51,8 +52,18 @@ export default function CarouselEditorPage({ params }: PageProps) {
         setNotFound(true);
         return;
       }
-      if (res.ok) {
+      if (!res.ok) {
+        // Report why the carousel could not be read instead of spinning
+        // forever. Transient failures while polling are ignored so a blip
+        // during generation does not replace a carousel already on screen.
+        const body = await res.json().catch(() => ({}));
+        const message = (body as { error?: string }).error;
+        setLoadError(message || `Request failed with status ${res.status}.`);
+        return;
+      }
+      {
         const data = await res.json();
+        setLoadError(null);
         setCarousel((prev) => {
           // If new slides were added during generation, jump to the latest slide
           if (prev && data.slides.length > prev.slides.length) {
@@ -178,6 +189,23 @@ export default function CarouselEditorPage({ params }: PageProps) {
         <p className="text-lg font-semibold">Carousel not found</p>
         <p className="text-sm text-muted-foreground">
           This carousel may have been deleted.
+        </p>
+        <Link href="/" className="text-sm text-accent underline">
+          Back to dashboard
+        </Link>
+      </div>
+    );
+  }
+
+  if (!carousel && loadError) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
+        <p className="text-lg font-semibold">Couldn&apos;t open this carousel</p>
+        <p className="text-sm text-muted-foreground max-w-lg break-words">
+          {loadError}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Nothing was deleted. Your data files were left as they are.
         </p>
         <Link href="/" className="text-sm text-accent underline">
           Back to dashboard

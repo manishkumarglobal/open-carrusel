@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import path from "path";
 import { addReferenceImage, removeReferenceImage, getCarousel } from "@/lib/carousels";
 import { generateId, now } from "@/lib/utils";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function GET(
   _request: Request,
@@ -44,7 +45,9 @@ export async function POST(
     }
 
     return NextResponse.json(result, { status: 201 });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
@@ -67,7 +70,9 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

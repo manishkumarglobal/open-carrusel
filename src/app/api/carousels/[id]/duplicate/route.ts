@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { duplicateCarousel } from "@/lib/carousels";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function POST(
   _request: Request,
@@ -12,7 +13,9 @@ export async function POST(
       return NextResponse.json({ error: "Carousel not found" }, { status: 404 });
     }
     return NextResponse.json(duplicate, { status: 201 });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Failed to duplicate" }, { status: 500 });
   }
 }

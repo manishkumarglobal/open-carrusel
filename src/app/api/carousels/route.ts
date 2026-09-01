@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { listCarousels, createCarousel } from "@/lib/carousels";
 import type { AspectRatio } from "@/types/carousel";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function GET() {
-  const carousels = await listCarousels();
-  return NextResponse.json({ carousels });
+  try {
+    const carousels = await listCarousels();
+    return NextResponse.json({ carousels });
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
+    throw err;
+  }
 }
 
 export async function POST(request: Request) {
@@ -29,7 +36,9 @@ export async function POST(request: Request) {
 
     const carousel = await createCarousel(name.trim(), ratio);
     return NextResponse.json(carousel, { status: 201 });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

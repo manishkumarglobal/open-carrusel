@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { updateSlide, deleteSlide } from "@/lib/carousels";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function PUT(
   request: Request,
@@ -13,7 +14,9 @@ export async function PUT(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     return NextResponse.json(slide);
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

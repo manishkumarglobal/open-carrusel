@@ -1,15 +1,18 @@
-import { readDataSafe, writeData } from "./data";
+import { readDataSafe, mutateData } from "./data";
 import { generateId, now } from "./utils";
 import type { StylePreset, StylePresetsData } from "@/types/style-preset";
 
 const FILE = "style-presets.json";
 
+const emptyData = (): StylePresetsData => ({ presets: [] });
+
 async function load(): Promise<StylePresetsData> {
-  return readDataSafe<StylePresetsData>(FILE, { presets: [] });
+  return readDataSafe<StylePresetsData>(FILE, emptyData());
 }
 
-async function save(data: StylePresetsData): Promise<void> {
-  await writeData(FILE, data);
+/** Every change to style-presets.json goes through here, under the file's lock. */
+function mutate<R>(fn: (data: StylePresetsData) => R): Promise<R> {
+  return mutateData<StylePresetsData, R>(FILE, emptyData, fn);
 }
 
 export async function listPresets(): Promise<StylePreset[]> {
@@ -25,22 +28,22 @@ export async function getPreset(id: string): Promise<StylePreset | null> {
 export async function createPreset(
   params: Omit<StylePreset, "id" | "createdAt">
 ): Promise<StylePreset> {
-  const data = await load();
-  const preset: StylePreset = {
-    ...params,
-    id: generateId(),
-    createdAt: now(),
-  };
-  data.presets.push(preset);
-  await save(data);
-  return preset;
+  return mutate((data) => {
+    const preset: StylePreset = {
+      ...params,
+      id: generateId(),
+      createdAt: now(),
+    };
+    data.presets.push(preset);
+    return preset;
+  });
 }
 
 export async function deletePreset(id: string): Promise<boolean> {
-  const data = await load();
-  const idx = data.presets.findIndex((p) => p.id === id);
-  if (idx === -1) return false;
-  data.presets.splice(idx, 1);
-  await save(data);
-  return true;
+  return mutate((data) => {
+    const idx = data.presets.findIndex((p) => p.id === id);
+    if (idx === -1) return false;
+    data.presets.splice(idx, 1);
+    return true;
+  });
 }

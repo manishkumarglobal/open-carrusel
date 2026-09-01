@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listPresets, createPreset } from "@/lib/style-presets";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function GET() {
   const presets = await listPresets();
@@ -29,7 +30,9 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(preset, { status: 201 });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
