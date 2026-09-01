@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.1] - 2026-09-02
+
+The first release of this maintained fork. Everything here is a backward-
+compatible fix or an additive change on top of the upstream 0.1.0 baseline.
+
 ### Added
 
 - Fork provenance documentation: an `About this fork` notice in the README and a
@@ -75,3 +82,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transition direction. The previous index is tracked in state instead, which
   removes a `react-hooks/refs` violation that made the newly added lint gate
   unpassable and could have produced a stale transition direction.
+
+[Unreleased]: https://github.com/manishkumarglobal/open-carrusel/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/manishkumarglobal/open-carrusel/releases/tag/v0.1.1
