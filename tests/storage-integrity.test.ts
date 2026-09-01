@@ -84,13 +84,13 @@ describe("concurrent mutations", () => {
     await Promise.all([
       updateBrand({ name: "Studio" }),
       updateBrand({ styleKeywords: ["minimal", "editorial"] }),
-      updateBrand({ colors: { accent: "#C77B5A" } as never }),
+      updateBrand({ logoPath: "/uploads/logo.png" }),
     ]);
 
     const brand = await getBrand();
     expect(brand.name).toBe("Studio");
     expect(brand.styleKeywords).toEqual(["minimal", "editorial"]);
-    expect(brand.colors.accent).toBe("#C77B5A");
+    expect(brand.logoPath).toBe("/uploads/logo.png");
   });
 });
 
