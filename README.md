@@ -253,6 +253,7 @@ open-carrusel/
 ├── public/uploads/           ← user uploads (gitignored): logos, reference images
 ├── scripts/
 │   ├── setup.mjs             ← npm install + seed data dirs + Claude CLI detection (cross-platform)
+│   ├── dev-server.mjs        ← launches the dev server detached (zero deps, survives its caller)
 │   └── doctor.mjs            ← env diagnostic (zero deps, runs pre-install)
 ├── src/
 │   ├── app/
