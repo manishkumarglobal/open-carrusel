@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server";
 import { getCarousel, updateCarousel, deleteCarousel } from "@/lib/carousels";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const carousel = await getCarousel(id);
-  if (!carousel) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  try {
+    const carousel = await getCarousel(id);
+    if (!carousel) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json(carousel);
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
+    throw err;
   }
-  return NextResponse.json(carousel);
 }
 
 export async function PUT(
@@ -25,7 +32,9 @@ export async function PUT(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     return NextResponse.json(updated);
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

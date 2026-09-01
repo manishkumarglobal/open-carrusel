@@ -1,16 +1,19 @@
-import { readDataSafe, writeData } from "./data";
+import { readDataSafe, mutateData } from "./data";
 import { generateId, now } from "./utils";
 import type { Template, TemplatesData } from "@/types/template";
 import type { Carousel } from "@/types/carousel";
 
 const FILE = "templates.json";
 
+const emptyData = (): TemplatesData => ({ templates: [] });
+
 async function load(): Promise<TemplatesData> {
-  return readDataSafe<TemplatesData>(FILE, { templates: [] });
+  return readDataSafe<TemplatesData>(FILE, emptyData());
 }
 
-async function save(data: TemplatesData): Promise<void> {
-  await writeData(FILE, data);
+/** Every change to templates.json goes through here, under the file's lock. */
+function mutate<R>(fn: (data: TemplatesData) => R): Promise<R> {
+  return mutateData<TemplatesData, R>(FILE, emptyData, fn);
 }
 
 export async function listTemplates(): Promise<Template[]> {
@@ -28,31 +31,31 @@ export async function saveAsTemplate(
   name?: string,
   description?: string
 ): Promise<Template> {
-  const data = await load();
-  const template: Template = {
-    id: generateId(),
-    name: name || carousel.name,
-    description: description || `Template from ${carousel.name}`,
-    aspectRatio: carousel.aspectRatio,
-    slides: carousel.slides.map(({ id, html, order, notes }) => ({
-      id,
-      html,
-      order,
-      notes,
-    })),
-    tags: carousel.tags,
-    createdAt: now(),
-  };
-  data.templates.push(template);
-  await save(data);
-  return template;
+  return mutate((data) => {
+    const template: Template = {
+      id: generateId(),
+      name: name || carousel.name,
+      description: description || `Template from ${carousel.name}`,
+      aspectRatio: carousel.aspectRatio,
+      slides: carousel.slides.map(({ id, html, order, notes }) => ({
+        id,
+        html,
+        order,
+        notes,
+      })),
+      tags: carousel.tags,
+      createdAt: now(),
+    };
+    data.templates.push(template);
+    return template;
+  });
 }
 
 export async function deleteTemplate(id: string): Promise<boolean> {
-  const data = await load();
-  const idx = data.templates.findIndex((t) => t.id === id);
-  if (idx === -1) return false;
-  data.templates.splice(idx, 1);
-  await save(data);
-  return true;
+  return mutate((data) => {
+    const idx = data.templates.findIndex((t) => t.id === id);
+    if (idx === -1) return false;
+    data.templates.splice(idx, 1);
+    return true;
+  });
 }

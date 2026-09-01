@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStagedAction, updateStagedActionStatus } from "@/lib/staged-actions";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function GET(
   _request: Request,
@@ -31,7 +32,9 @@ export async function PATCH(
     }
 
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

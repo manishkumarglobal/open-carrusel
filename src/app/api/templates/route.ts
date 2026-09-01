@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { listTemplates, saveAsTemplate } from "@/lib/templates";
 import { getCarousel } from "@/lib/carousels";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function GET() {
-  const templates = await listTemplates();
-  return NextResponse.json({ templates });
+  try {
+    const templates = await listTemplates();
+    return NextResponse.json({ templates });
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
+    throw err;
+  }
 }
 
 export async function POST(request: Request) {
@@ -33,7 +40,9 @@ export async function POST(request: Request) {
 
     const template = await saveAsTemplate(carousel, name, description);
     return NextResponse.json(template, { status: 201 });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

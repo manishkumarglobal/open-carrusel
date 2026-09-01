@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCarousel, updateCarousel } from "@/lib/carousels";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function GET(
   _request: Request,
@@ -37,7 +38,9 @@ export async function PUT(
       caption: updated.caption || "",
       hashtags: updated.hashtags || [],
     });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

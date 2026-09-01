@@ -1,4 +1,4 @@
-import { readDataSafe, writeData } from "./data";
+import { readDataSafe, mutateData } from "./data";
 import { generateId, now } from "./utils";
 import type {
   StagedAction,
@@ -9,12 +9,15 @@ import type {
 
 const FILE = "staged-actions.json";
 
+const emptyData = (): StagedActionsData => ({ actions: [] });
+
 async function load(): Promise<StagedActionsData> {
-  return readDataSafe<StagedActionsData>(FILE, { actions: [] });
+  return readDataSafe<StagedActionsData>(FILE, emptyData());
 }
 
-async function save(data: StagedActionsData): Promise<void> {
-  await writeData(FILE, data);
+/** Every change to staged-actions.json goes through here, under the file's lock. */
+function mutate<R>(fn: (data: StagedActionsData) => R): Promise<R> {
+  return mutateData<StagedActionsData, R>(FILE, emptyData, fn);
 }
 
 export async function listStagedActions(): Promise<StagedAction[]> {
@@ -37,34 +40,34 @@ export async function createStagedAction(params: {
   carouselId: string;
   autoExecute?: boolean;
 }): Promise<StagedAction> {
-  const data = await load();
-  const action: StagedAction = {
-    id: generateId(),
-    type: params.type,
-    fileName: params.fileName,
-    content: params.content,
-    description: params.description,
-    carouselId: params.carouselId,
-    autoExecute: params.autoExecute ?? false,
-    status: "pending",
-    createdAt: now(),
-    resolvedAt: null,
-  };
-  data.actions.push(action);
-  await save(data);
-  return action;
+  return mutate((data) => {
+    const action: StagedAction = {
+      id: generateId(),
+      type: params.type,
+      fileName: params.fileName,
+      content: params.content,
+      description: params.description,
+      carouselId: params.carouselId,
+      autoExecute: params.autoExecute ?? false,
+      status: "pending",
+      createdAt: now(),
+      resolvedAt: null,
+    };
+    data.actions.push(action);
+    return action;
+  });
 }
 
 export async function updateStagedAction(
   id: string,
   updates: Partial<Pick<StagedAction, "status" | "resolvedAt">>
 ): Promise<StagedAction | null> {
-  const data = await load();
-  const action = data.actions.find((a) => a.id === id);
-  if (!action) return null;
-  Object.assign(action, updates);
-  await save(data);
-  return action;
+  return mutate((data) => {
+    const action = data.actions.find((a) => a.id === id);
+    if (!action) return null;
+    Object.assign(action, updates);
+    return action;
+  });
 }
 
 export async function updateStagedActionStatus(

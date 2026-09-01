@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listStagedActions, createStagedAction } from "@/lib/staged-actions";
 import type { StagedActionType } from "@/types/staged-action";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function GET() {
   const actions = await listStagedActions();
@@ -53,7 +54,9 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ action }, { status: 201 });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

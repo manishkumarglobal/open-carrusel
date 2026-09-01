@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Layers, Calendar, SlidersHorizontal, Trash2, Copy } from "lucide-react";
+import { Plus, Layers, Calendar, SlidersHorizontal, Trash2, Copy, AlertTriangle } from "lucide-react";
 import { TopBar } from "@/components/layout/TopBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +21,25 @@ export default function DashboardPage() {
   const [showBrandSetup, setShowBrandSetup] = useState(false);
   const [brand, setBrand] = useState<BrandConfig | null>(null);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   useEffect(() => {
+    // A failed load must not look like an empty account. If the stored data
+    // cannot be read the server says why, and that reason is shown instead of
+    // the "no carousels yet" empty state.
+    const getJson = async <T,>(url: string): Promise<T> => {
+      const res = await fetch(url);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = (body as { error?: string }).error;
+        throw new Error(message || `Request failed with status ${res.status}.`);
+      }
+      return body as T;
+    };
+
     Promise.all([
-      fetch("/api/carousels").then((r) => r.json()),
-      fetch("/api/brand").then((r) => r.json()),
+      getJson<{ carousels?: Carousel[] }>("/api/carousels"),
+      getJson<BrandConfig>("/api/brand"),
     ])
       .then(([carouselData, brandData]) => {
         setCarousels(carouselData.carousels || []);
@@ -32,9 +47,13 @@ export default function DashboardPage() {
         if (!brandData.name || brandData.name.trim() === "") {
           setShowBrandSetup(true);
         }
-        setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err: unknown) =>
+        setLoadError(
+          err instanceof Error ? err.message : "Could not load your carousels."
+        )
+      )
+      .finally(() => setLoading(false));
   }, []);
 
   const [confirmState, setConfirmState] = useState<{
@@ -150,6 +169,26 @@ export default function DashboardPage() {
 
           {activeTab === "templates" ? (
             <TemplateGallery />
+          ) : loadError ? (
+            <div
+              role="alert"
+              className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
+            >
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-destructive">
+                    Couldn&apos;t load your carousels
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-1 break-words">
+                    {loadError}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Nothing was deleted. Your data files were left as they are.
+                  </p>
+                </div>
+              </div>
+            </div>
           ) : loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (

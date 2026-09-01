@@ -6,6 +6,7 @@ import { buildSystemPrompt } from "@/lib/chat-system-prompt";
 import { getBrand } from "@/lib/brand";
 import { getCarousel } from "@/lib/carousels";
 import { getPreset } from "@/lib/style-presets";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,10 +47,17 @@ export async function POST(request: NextRequest) {
   }
 
   // Build dynamic system prompt with current brand + carousel + style preset context
-  const brand = await getBrand();
-  const carousel = carouselId ? await getCarousel(carouselId) : null;
-  const stylePreset = stylePresetId ? await getPreset(stylePresetId) : null;
-  const systemPrompt = buildSystemPrompt(brand, carousel, stylePreset);
+  let systemPrompt: string;
+  try {
+    const brand = await getBrand();
+    const carousel = carouselId ? await getCarousel(carouselId) : null;
+    const stylePreset = stylePresetId ? await getPreset(stylePresetId) : null;
+    systemPrompt = buildSystemPrompt(brand, carousel, stylePreset);
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
+    throw err;
+  }
 
   const claudePath = getClaudePath();
   const abortController = new AbortController();

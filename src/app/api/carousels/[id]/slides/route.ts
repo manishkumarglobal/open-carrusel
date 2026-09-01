@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { addSlide, reorderSlides, getCarousel } from "@/lib/carousels";
+import { dataErrorResponse } from "@/lib/api-errors";
 
 export async function POST(
   request: Request,
@@ -25,7 +26,9 @@ export async function POST(
       );
     }
     return NextResponse.json(slide, { status: 201 });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
@@ -56,7 +59,9 @@ export async function PUT(
 
     const carousel = await getCarousel(id);
     return NextResponse.json({ slides: carousel?.slides ?? [] });
-  } catch {
+  } catch (err) {
+    const dataError = dataErrorResponse(err);
+    if (dataError) return dataError;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

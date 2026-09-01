@@ -13,9 +13,10 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
-    // Storage tests write to a temporary data directory and mutate
-    // process.cwd(); running files in a single process keeps that
-    // deterministic instead of racing across worker threads.
+    // Storage tests redirect the data directory by changing the working
+    // directory, which is only available in child processes, not worker
+    // threads. Running one file at a time keeps that switch deterministic.
+    pool: "forks",
     fileParallelism: false,
   },
 });
