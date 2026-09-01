@@ -17,9 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   maintainer guide covering the upstream sync model.
 - A test harness (Vitest) and a continuous integration workflow running
   typecheck, lint, tests, and a production build on every pull request.
+- `GET /api/chat/check` now also reports `baseUrl`, the origin the design agent
+  will be told to call, so a port mismatch is visible without starting a chat.
 
 ### Fixed
 
+- The design agent is told the origin the app is actually running on instead of a
+  hardcoded `http://localhost:3000`. Running on any other port, which `/start
+  [port]` and `PORT` both support, previously sent the agent's slide writes to
+  whatever else was listening on 3000, or to nothing at all.
 - Brand fonts now actually render. Font-family extraction failed on the exact
   form the system prompt teaches the AI to write, `font-family: 'Name', serif`,
   because the captured value was not allowed to contain quote characters. Every

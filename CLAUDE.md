@@ -4,7 +4,7 @@ AI-powered Instagram carousel builder. Next.js 16 + React 19 + TypeScript + Tail
 
 ## Architecture
 
-- **Frontend**: React app at localhost:3000 with chat panel (left), carousel preview (center), slide filmstrip (bottom)
+- **Frontend**: React app (localhost:3000 by default; `/start [port]` and `PORT` override it) with chat panel (left), carousel preview (center), slide filmstrip (bottom)
 - **AI Agent**: Claude CLI spawned as subprocess via `/api/chat`, communicates through SSE streaming
 - **Storage**: JSON files in `/data/` with async-mutex locking and atomic writes
 - **Export**: Puppeteer screenshots HTML slides to PNG at exact Instagram dimensions
@@ -20,7 +20,9 @@ AI-powered Instagram carousel builder. Next.js 16 + React 19 + TypeScript + Tail
 
 ## API Routes
 
-All at localhost:3000:
+Served by the running app, on whichever port it was started with. The origin the
+design agent is told to call is derived per request by `resolveAppOrigin()` in
+`src/lib/request-origin.ts`; never hardcode a port in the system prompt.
 
 - `POST /api/chat` — Claude CLI subprocess + SSE streaming
 - `GET/POST /api/carousels` — List/create carousels

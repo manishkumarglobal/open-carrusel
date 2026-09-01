@@ -3,11 +3,24 @@ import type { Carousel } from "@/types/carousel";
 import type { StylePreset } from "@/types/style-preset";
 import { DIMENSIONS, MAX_SLIDES } from "@/types/carousel";
 
-export function buildSystemPrompt(
-  brand: BrandConfig,
-  carousel?: Carousel | null,
-  stylePreset?: StylePreset | null
-): string {
+export interface SystemPromptContext {
+  /**
+   * Origin of the running application, from the request being handled. The
+   * agent writes slides back through this app's own API, so this must point at
+   * the instance that spawned the chat request rather than a fixed port.
+   */
+  baseUrl: string;
+  brand: BrandConfig;
+  carousel?: Carousel | null;
+  stylePreset?: StylePreset | null;
+}
+
+export function buildSystemPrompt({
+  baseUrl,
+  brand,
+  carousel,
+  stylePreset,
+}: SystemPromptContext): string {
   const brandSection = brand.name
     ? `## Brand identity
 - Name: ${brand.name}
@@ -80,25 +93,25 @@ ${presetSection}
 ## API — Use curl for all operations
 
 ### Create a slide:
-curl -s -X POST http://localhost:3000/api/carousels/${carousel?.id || "{ID}"}/slides \\
+curl -s -X POST ${baseUrl}/api/carousels/${carousel?.id || "{ID}"}/slides \\
   -H "Content-Type: application/json" \\
   -d '{"html": "YOUR_HTML_HERE", "notes": "description"}'
 
 ### Update a slide:
-curl -s -X PUT http://localhost:3000/api/carousels/${carousel?.id || "{ID}"}/slides/{SLIDE_ID} \\
+curl -s -X PUT ${baseUrl}/api/carousels/${carousel?.id || "{ID}"}/slides/{SLIDE_ID} \\
   -H "Content-Type: application/json" \\
   -d '{"html": "UPDATED_HTML"}'
 
 ### Delete a slide:
-curl -s -X DELETE http://localhost:3000/api/carousels/${carousel?.id || "{ID}"}/slides/{SLIDE_ID}
+curl -s -X DELETE ${baseUrl}/api/carousels/${carousel?.id || "{ID}"}/slides/{SLIDE_ID}
 
 ### Save caption + hashtags:
-curl -s -X PUT http://localhost:3000/api/carousels/${carousel?.id || "{ID}"}/caption \\
+curl -s -X PUT ${baseUrl}/api/carousels/${carousel?.id || "{ID}"}/caption \\
   -H "Content-Type: application/json" \\
   -d '{"caption": "Your caption text...", "hashtags": ["tag1", "tag2", "tag3"]}'
 
 ### Save as style preset:
-curl -s -X POST http://localhost:3000/api/style-presets \\
+curl -s -X POST ${baseUrl}/api/style-presets \\
   -H "Content-Type: application/json" \\
   -d '{"name": "Style Name", "designRules": "description of visual rules...", "aspectRatio": "${carousel?.aspectRatio || "4:5"}"}'
 
