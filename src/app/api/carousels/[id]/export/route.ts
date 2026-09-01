@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import archiver from "archiver";
 import { getCarousel } from "@/lib/carousels";
-import { exportAllSlides } from "@/lib/export-slides";
+import { exportAllSlides, describeExportFailure } from "@/lib/export-slides";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,10 +64,10 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error("Export error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
+    // Full detail stays server-side; the client gets a safe, actionable summary.
+    console.error("[export] failed", error);
     return NextResponse.json(
-      { error: `Export failed: ${message}` },
+      { error: describeExportFailure(error) },
       { status: 500 }
     );
   }

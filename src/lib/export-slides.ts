@@ -67,6 +67,50 @@ async function inlineImages(html: string): Promise<string> {
 }
 
 /**
+ * Turns an export failure into something the user can act on.
+ *
+ * The underlying errors are Puppeteer and Sharp internals: browser process
+ * output, absolute paths, stack traces. None of that belongs in the UI, but
+ * "Export failed" on its own is what made a broken Chromium install look like a
+ * spinner that quietly gave up. The full error is logged server-side.
+ */
+export function describeExportFailure(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const name = error instanceof Error ? error.name : "";
+
+  // Puppeteer words a missing or damaged browser several different ways
+  // depending on whether the path was configured, downloaded or corrupt. All of
+  // them mean the same thing to the user and have the same fix.
+  if (
+    /could not find chrome|could not find browser|failed to launch|browser process|browser was not found|no executable was found|tried to find the browser|is not downloaded|spawn .*chrome/i.test(
+      message
+    )
+  ) {
+    return (
+      "Chromium could not start, so slides could not be rendered. " +
+      "Reinstall it with: npx puppeteer browsers install chrome"
+    );
+  }
+
+  if (name === "TimeoutError" || /timeout|timed out/i.test(message)) {
+    return (
+      "A slide took too long to render and the export timed out. " +
+      "Check that any images the slide references are reachable, then try again."
+    );
+  }
+
+  if (/ENOSPC|no space left/i.test(message)) {
+    return "There is not enough disk space to write the exported images.";
+  }
+
+  if (/ENOMEM|out of memory/i.test(message)) {
+    return "The export ran out of memory. Try exporting fewer slides at a time.";
+  }
+
+  return "The export failed while rendering slides. See the server console for details.";
+}
+
+/**
  * Export a single slide to PNG buffer.
  */
 export async function exportSlide(
