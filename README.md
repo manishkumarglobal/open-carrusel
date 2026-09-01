@@ -20,8 +20,32 @@
 
 ---
 
+## 🔱 About this fork
+
+This repository is a **maintained fork** of
+[Hainrixz/open-carrusel](https://github.com/Hainrixz/open-carrusel), the original
+Open Carrusel project by [tododeia](https://www.tododeia.com). All credit for the
+product, its design, and its original implementation belongs to the upstream
+project and its contributors — see [Acknowledgments](#-acknowledgments) and
+[About the maker](#-about-the-maker) below.
+
+The fork keeps the original philosophy intact: local-first, chat-driven, HTML
+slides, JSON storage, no accounts, no cloud. It is not a redesign and not a
+feature expansion.
+
+What it adds is a small set of reliability, rendering-correctness, and workflow
+improvements, each tracked as an Issue and merged through a reviewed pull
+request. Fork-specific changes are documented in [`CHANGELOG.md`](./CHANGELOG.md),
+and the upstream sync model is documented in
+[`docs/MAINTAINING-THIS-FORK.md`](./docs/MAINTAINING-THIS-FORK.md).
+
+Licensing is unchanged: MIT, with the original copyright notice preserved.
+
+---
+
 ## Table of contents
 
+- [About this fork](#-about-this-fork)
 - [Why Open Carrusel](#-why-open-carrusel)
 - [See it in action](#-see-it-in-action)
 - [Quickstart (60 seconds)](#-quickstart-60-seconds)
@@ -361,7 +385,9 @@ Open ideas — PRs welcome. Tick what you ship, add your own.
 
 PRs welcome. The bar:
 
-- **Run `npm run doctor` and `npm run build`** before opening a PR — both should pass clean.
+- **Run the full gate** before opening a PR — `npm run typecheck && npm run lint && npm test && npm run build` should all pass clean. `npm run doctor` checks your local environment.
+- **Open an Issue first** for anything material, and reference it from the PR (`Closes #N`). See [`docs/MAINTAINING-THIS-FORK.md`](./docs/MAINTAINING-THIS-FORK.md).
+- **Update [`CHANGELOG.md`](./CHANGELOG.md)** under `[Unreleased]` when behavior changes.
 - **Follow the file conventions** in [`CLAUDE.md`](./CLAUDE.md) — components ≤ 300 lines, types in `src/types/`, libs in `src/lib/`, `cn()` from `src/lib/utils.ts` for class merging, all data writes through `src/lib/data.ts`.
 - **Don't touch the slide rendering contract.** `wrapSlideHtml()` in `src/lib/slide-html.ts` is the seam between preview and export. Change it carefully and test the export round-trip.
 - **Animations follow [Emil Kowalski's philosophy](https://animations.dev)** — CSS-first, custom easings (already defined as CSS variables in `globals.css`), respect `prefers-reduced-motion`. See the `oc-*` utility classes already in `globals.css` before authoring new ones.
