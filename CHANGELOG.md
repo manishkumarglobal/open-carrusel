@@ -22,6 +22,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A failed export now says what went wrong and what to do about it, in the
+  editor. Failures previously went only to the browser console, so a broken
+  Chromium install looked like a spinner that quietly gave up. The message is a
+  classified summary; the underlying error, including paths and stack traces,
+  stays in the server log.
+- The export button no longer shows a slide counter frozen at zero. It read from
+  a progress stream the export route never produced, so the count could not
+  move. It reports an honest indeterminate state instead.
+- The safe-zone overlay lines up with the slide. It was positioned against the
+  preview container rather than the letterboxed slide inside it, so its guides
+  ran past the slide edges by 62% of the slide's width at 1:1 and 188% at 9:16.
+  Content the overlay called safe could sit outside the slide entirely.
 - The design agent is told the origin the app is actually running on instead of a
   hardcoded `http://localhost:3000`. Running on any other port, which `/start
   [port]` and `PORT` both support, previously sent the agent's slide writes to

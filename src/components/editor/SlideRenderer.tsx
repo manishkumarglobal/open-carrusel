@@ -10,6 +10,14 @@ interface SlideRendererProps {
   aspectRatio: AspectRatio;
   className?: string;
   style?: React.CSSProperties;
+  /**
+   * Rendered inside the scaled slide box, on top of the iframe.
+   *
+   * The slide is letterboxed inside its container, so anything that has to line
+   * up with the slide's edges (the safe-zone guides) must be positioned against
+   * this box rather than against the container around it.
+   */
+  overlay?: React.ReactNode;
 }
 
 export function SlideRenderer({
@@ -17,6 +25,7 @@ export function SlideRenderer({
   aspectRatio,
   className,
   style,
+  overlay,
 }: SlideRendererProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
@@ -93,6 +102,7 @@ export function SlideRenderer({
               pointerEvents: "none",
             }}
           />
+          {overlay}
         </div>
       )}
     </div>
