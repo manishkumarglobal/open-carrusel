@@ -34,7 +34,7 @@ design agent is told to call is derived per request by `resolveAppOrigin()` in
 - `POST /api/carousels/[id]/export` — Export all slides to PNG ZIP
 - `GET/PUT /api/brand` — Brand configuration
 - `GET/POST /api/templates` — Templates
-- `POST /api/upload` — Image upload (PNG/JPG/WebP only, max 10MB)
+- `POST /api/upload` — Upload (images PNG/JPG/WebP, fonts WOFF2/TTF; max 10MB, type checked by magic bytes)
 - `GET /api/fonts` — Google Fonts list
 
 ## Conventions
@@ -45,14 +45,14 @@ design agent is told to call is derived per request by `resolveAppOrigin()` in
 - All data mutations go through `src/lib/data.ts` (never direct fs writes for JSON)
 - Update routes never pass a parsed request body straight to a mutator. They select the fields the endpoint defines as mutable via `src/lib/api-input.ts`; everything else is server-owned
 - iframe slides always use `sandbox=""` attribute (no JavaScript execution)
-- The Claude subprocess gets `--allowedTools Bash WebFetch` and uses curl to call local API routes
+- The Claude subprocess gets `--allowedTools Bash WebFetch Read`: `Bash` to curl the local API routes, `WebFetch` to research while designing, `Read` to view reference images
 
 ## Instagram Dimensions
 
 - 1:1 = 1080x1080 (square)
 - 4:5 = 1080x1350 (portrait, recommended)
 - 9:16 = 1080x1920 (story)
-- Max 10 slides per carousel
+- Max 20 slides per carousel (`MAX_SLIDES` in `src/types/carousel.ts`)
 
 ## Slide HTML Rules
 
