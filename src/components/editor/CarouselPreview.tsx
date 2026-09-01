@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SlideRenderer } from "./SlideRenderer";
@@ -23,11 +23,18 @@ export function CarouselPreview({
   showSafeZones = false,
 }: CarouselPreviewProps) {
   const slide = slides[activeIndex];
-  const prevIndexRef = useRef(activeIndex);
-  const direction = activeIndex >= prevIndexRef.current ? 12 : -12;
-  useEffect(() => {
-    prevIndexRef.current = activeIndex;
-  }, [activeIndex]);
+
+  // The slide enters from the right when moving forward and from the left when
+  // moving back. Deriving that from the previous index needs the previous value
+  // during render, so it is held in state and adjusted in-render (React's
+  // documented pattern) rather than read from a ref, which is not safe to read
+  // while rendering.
+  const [prevIndex, setPrevIndex] = useState(activeIndex);
+  const [direction, setDirection] = useState(12);
+  if (prevIndex !== activeIndex) {
+    setDirection(activeIndex >= prevIndex ? 12 : -12);
+    setPrevIndex(activeIndex);
+  }
 
   if (!slide) {
     return (
