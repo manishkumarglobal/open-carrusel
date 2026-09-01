@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { listCarousels, createCarousel } from "@/lib/carousels";
 import type { AspectRatio } from "@/types/carousel";
 import { dataErrorResponse } from "@/lib/api-errors";
+import { isAspectRatio } from "@/lib/api-input";
 
 export async function GET() {
   try {
@@ -29,10 +30,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const validRatios: AspectRatio[] = ["1:1", "4:5", "9:16"];
-    const ratio = validRatios.includes(aspectRatio as AspectRatio)
-      ? (aspectRatio as AspectRatio)
-      : "4:5";
+    // Same validator the update route uses, so the two cannot drift apart.
+    const ratio: AspectRatio = isAspectRatio(aspectRatio) ? aspectRatio : "4:5";
 
     const carousel = await createCarousel(name.trim(), ratio);
     return NextResponse.json(carousel, { status: 201 });

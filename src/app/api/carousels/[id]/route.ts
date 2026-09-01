@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCarousel, updateCarousel, deleteCarousel } from "@/lib/carousels";
 import { dataErrorResponse } from "@/lib/api-errors";
+import { pickCarouselUpdate } from "@/lib/api-input";
 
 export async function GET(
   _request: Request,
@@ -27,7 +28,10 @@ export async function PUT(
   const { id } = await params;
   try {
     const body = await request.json();
-    const updated = await updateCarousel(id, body);
+    // Only the fields this endpoint defines as mutable. Everything else,
+    // including id, slides, referenceImages, isTemplate and the timestamps, is
+    // server-owned and is never taken from the request.
+    const updated = await updateCarousel(id, pickCarouselUpdate(body));
     if (!updated) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

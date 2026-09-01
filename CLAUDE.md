@@ -43,6 +43,7 @@ design agent is told to call is derived per request by `resolveAppOrigin()` in
 - Use `cn()` from `src/lib/utils.ts` for class merging
 - Types in `src/types/`, libs in `src/lib/`, components in `src/components/`
 - All data mutations go through `src/lib/data.ts` (never direct fs writes for JSON)
+- Update routes never pass a parsed request body straight to a mutator. They select the fields the endpoint defines as mutable via `src/lib/api-input.ts`; everything else is server-owned
 - iframe slides always use `sandbox=""` attribute (no JavaScript execution)
 - The Claude subprocess gets `--allowedTools Bash WebFetch` and uses curl to call local API routes
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getBrand, updateBrand } from "@/lib/brand";
 import { dataErrorResponse } from "@/lib/api-errors";
+import { pickBrandUpdate } from "@/lib/api-input";
 
 export async function GET() {
   try {
@@ -16,7 +17,9 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const updated = await updateBrand(body);
+    // The brand setup form posts the whole stored object back, timestamps
+    // included. Only the configurable fields are carried across.
+    const updated = await updateBrand(pickBrandUpdate(body));
     return NextResponse.json(updated);
   } catch (err) {
     const dataError = dataErrorResponse(err);

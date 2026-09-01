@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateSlide, deleteSlide } from "@/lib/carousels";
 import { dataErrorResponse } from "@/lib/api-errors";
+import { pickSlideUpdate } from "@/lib/api-input";
 
 export async function PUT(
   request: Request,
@@ -9,7 +10,9 @@ export async function PUT(
   const { id, slideId } = await params;
   try {
     const body = await request.json();
-    const slide = await updateSlide(id, slideId, body);
+    // Only html and notes. id, order and previousVersions (the undo history)
+    // are server-owned and are never taken from the request.
+    const slide = await updateSlide(id, slideId, pickSlideUpdate(body));
     if (!slide) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
