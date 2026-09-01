@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.2] - 2026-09-02
+
+A narrowly scoped contract-hardening pass: the API stops accepting fields it
+never defined as mutable, and the assistant-facing documentation is brought back
+into line with the code.
+
 ### Security
 
 - Update endpoints no longer merge an arbitrary request body onto the stored
@@ -108,5 +116,6 @@ compatible fix or an additive change on top of the upstream 0.1.0 baseline.
   removes a `react-hooks/refs` violation that made the newly added lint gate
   unpassable and could have produced a stale transition direction.
 
-[Unreleased]: https://github.com/manishkumarglobal/open-carrusel/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/manishkumarglobal/open-carrusel/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/manishkumarglobal/open-carrusel/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/manishkumarglobal/open-carrusel/releases/tag/v0.1.1
