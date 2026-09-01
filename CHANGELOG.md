@@ -20,6 +20,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Brand fonts now actually render. Font-family extraction failed on the exact
+  form the system prompt teaches the AI to write, `font-family: 'Name', serif`,
+  because the captured value was not allowed to contain quote characters. Every
+  generated slide therefore rendered in a system fallback in both preview and
+  export, and because both failed identically there was nothing to notice.
+  Quoted and unquoted names, with and without fallbacks, in inline styles and in
+  style blocks, are all handled now.
+- Italic text uses the font's real italic design instead of a browser-synthesised
+  slant. The italic cut is requested separately per family, because Google
+  rejects the italic axis outright for families that have none, and a rejected
+  family in a combined request took every other family down with it.
+- Export no longer stalls. It waited for every declared font face to report
+  loaded, which never happens: only the faces a slide uses are ever loaded, so
+  the wait ran to its full 10 second timeout on every slide. It now waits for
+  font loading to settle, which is bounded and correct.
+- Export waits for images explicitly. Images previously arrived in time only as
+  a side effect of the font stall above, so removing the stall would have raced.
+- Font cache filenames are derived from sanitised family names. Names come from
+  AI-authored slide HTML and were previously interpolated into a path unescaped.
 - Concurrent changes to a data file are no longer lost. The per-file lock now
   covers the whole read, modify and write, so overlapping requests can no longer
   read the same snapshot and have the later write discard the earlier one while

@@ -2,7 +2,7 @@ import puppeteer, { type Browser } from "puppeteer";
 import { readFile } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
-import { wrapSlideHtml, extractFontFamilies } from "./slide-html";
+import { wrapSlideHtml, extractFontFamilies, usesItalic } from "./slide-html";
 import { getInlinedFontCSS } from "./fonts";
 import type { Slide, AspectRatio } from "@/types/carousel";
 import { DIMENSIONS } from "@/types/carousel";
@@ -11,6 +11,12 @@ import { DIMENSIONS } from "@/types/carousel";
 let browser: Browser | null = null;
 let exportCount = 0;
 const MAX_EXPORTS_BEFORE_RESTART = 50;
+
+// Every wait below is bounded. A slide that cannot finish loading still yields
+// a PNG rather than hanging the export.
+const PAGE_LOAD_TIMEOUT_MS = 20_000;
+const FONT_READY_TIMEOUT_MS = 10_000;
+const IMAGE_DECODE_TIMEOUT_MS = 10_000;
 
 async function getBrowser(): Promise<Browser> {
   if (browser && exportCount >= MAX_EXPORTS_BEFORE_RESTART) {
@@ -71,7 +77,9 @@ export async function exportSlide(
 
   // Get inlined font CSS
   const fontFamilies = extractFontFamilies(slide.html);
-  const inlinedFontCss = await getInlinedFontCSS(fontFamilies);
+  const inlinedFontCss = await getInlinedFontCSS(fontFamilies, {
+    italic: usesItalic(slide.html),
+  });
 
   // Inline images
   const inlinedHtml = await inlineImages(slide.html);
@@ -86,19 +94,52 @@ export async function exportSlide(
 
   try {
     await page.setViewport({ width, height, deviceScaleFactor: 1 });
-    await page.setContent(fullHtml, { waitUntil: "domcontentloaded", timeout: 15000 });
 
-    // Wait for fonts to be ready
+    // `load` rather than `domcontentloaded`: it waits for stylesheets and image
+    // bytes. Previously the page was screenshotted as soon as the DOM parsed,
+    // and images only made it in because the font wait below always stalled for
+    // its full timeout. Removing that accidental delay without waiting for
+    // images explicitly would have introduced a race.
+    await page.setContent(fullHtml, {
+      waitUntil: "load",
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
+
+    // Wait until the font loads the page actually started have settled.
+    // The previous check required every *declared* face to reach "loaded",
+    // which never happens: Google ships dozens of faces per family across
+    // weights and unicode subsets, and the ones this slide does not use stay
+    // unloaded forever. That check therefore ran to its full timeout on every
+    // slide. `document.fonts.status` reports exactly the pending-loads state.
     await page
-      .waitForFunction(
-        () =>
-          document.fonts.ready.then(() =>
-            [...document.fonts].every((f) => f.status === "loaded")
-          ),
-        { timeout: 10000 }
+      .waitForFunction(() => document.fonts.status === "loaded", {
+        timeout: FONT_READY_TIMEOUT_MS,
+      })
+      .catch(() => {
+        console.warn(
+          `[export] fonts did not settle within ${FONT_READY_TIMEOUT_MS}ms; capturing anyway`
+        );
+      });
+
+    // `load` guarantees image bytes arrived, not that they are decoded and
+    // paintable. Decoding explicitly makes the capture deterministic.
+    await page
+      .evaluate(
+        (timeoutMs: number) =>
+          Promise.race([
+            Promise.all(
+              Array.from(document.images).map((img) =>
+                img.decode().catch(() => undefined)
+              )
+            ).then(() => undefined),
+            new Promise<undefined>((resolve) =>
+              setTimeout(() => resolve(undefined), timeoutMs)
+            ),
+          ]),
+        IMAGE_DECODE_TIMEOUT_MS
       )
       .catch(() => {
-        // Font loading timeout — proceed with whatever loaded
+        console.warn("[export] image decode wait failed; capturing anyway");
       });
 
     const screenshotBuffer = await page.screenshot({
