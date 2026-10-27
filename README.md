@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> **This repository is archived and no longer maintained.**
+> Development continues in **[Framewoven](https://github.com/manishkumarglobal/framewoven)**, the independently maintained successor to this fork.
+> Framewoven carries this repository's full history and was first released as [v0.1.3](https://github.com/manishkumarglobal/framewoven/releases/tag/v0.1.3).
+> This fork's Issues, pull requests, tags, and releases remain here as a historical record.
+> The original project is [Hainrixz/open-carrusel](https://github.com/Hainrixz/open-carrusel).
+
 <div align="center">
 
 # Open Carrusel
